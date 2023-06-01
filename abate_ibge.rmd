@@ -1,0 +1,170 @@
+---
+title: "Abate"
+description: "Vide 'notas'"
+author script: 
+  - name: "Ítalo Marques-Monteiro"
+    github: https://github.com/italomarquesmonteiro
+    kaggle: https://www.kaggle.com/talomarquesmonteiro
+    linkedin: linkedin.com/in/ítalo-monteiro-0b2516144
+    lattes: http://lattes.cnpq.br/7174985368517137
+    orcid_id: https://orcid.org/0000-0003-4367-1034
+    affiliation: Anhanguera College  
+        - Department: Veterinary Medicine
+date: "2023-06-01"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+   *package* [`{conflicted}`](https://conflicted.r-lib.org/)
+   *package* [`{tidyverse}`](https://www.tidyverse.org) possui um ecossistema de packages:
+                           ->[{`ggplot2`}](https://ggplot2.tidyverse.org/).
+                            ->[{`tibble`}](https://tibble.tidyverse.org/).
+                             ->[{`tidyr`}](https://tidyr.tidyverse.org/).
+    
+                              ->[{`dplyr`}](https://dplyr.tidyverse.org/).
+                               ->[{`readr`}](https://readr.tidyverse.org/).
+                                ->[{`purrr`}](https://purrr.tidyverse.org/).
+                                 ->[{`forcats`}](https://forcats.tidyverse.org/).
+   *package* [{`geobr`}](https://github.com/ipeaGIT/geobr). Tem fácil acesso a conjuntos de dados espaciais oficiais do Brasil como objetos 'sf' em R. O pacote inclui uma ampla gama de dados geoespaciais disponíveis em várias escalas geográficas e por vários anos com atributos harmonizados, projeção e topologia fixa.
+                 - Dados do Instituto Brasileiro de Geografia e Estatística[`IBGE`](https://concla.ibge.gov.br/classificacoes/por-tema/codigo-de-areas/codigo-de-areas)
+
+```{r}
+library(conflicted)
+library(tidyverse)
+```
+
+> Notas
+* 1 - Os dados divulgados são oriundos de estabelecimentos que estão sob *inspeção sanitária federal, estadual ou municipal*.
+* 2 - Os dados das Unidades da Federação com menos de 3 informantes estão desidentificados com o caracter X. *Nessa análise vira* `NA`
+* 3 - O número de informantes se repete nos meses de cada trimestre devido à periodicidade de coleta da pesquisa ser trimestral.
+* 4 - A pesquisa do abate sofreu alterações conceituais a partir de 2012. 
+        As **categorias** de novilhos precoces, vitelos e novilhos foram fundidos em uma só: [novilhos]. 
+        O mesmo vale para [novilhas].
+* 5 - [{`Bovinos`}]()   - gado doméstico, dividido em categorias conforme sexo e idade:
+        [Boi]- bovino macho adulto, com 2 anos de idade ou mais. Inclui o macho não castrado (touro).
+        [Vaca]- bovino fêmea adulta, com 2 anos de idade ou mais, independente de já ter parido ou não.
+        [Novilho]- bovino macho jovem, com menos de 2 anos de idade. Inclui vitelo, bezerro e novilho (precoce ou não).
+        [Novilha]- bovino fêmea jovem, com menos de 2 anos de idade. Inclui vitela, bezerra e novilha (precoce ou não).
+* 6 - Peso da Carcaça - peso da carcaça quente (em Kg).
+            Entendendo-se como **carcaça**: o animal abatido, formado das massas musculares e ossos, desprovido de:
+                                                                     cabeça, 
+                                                                     mocotós, 
+                                                                     cauda, 
+                                                                     couro, 
+                                                                     órgãos 
+                                                                     vísceras torácicas e abdominais, 
+                                                                     tecnicamente preparado. 
+            Nos [frangos], é facultativa a retirada :
+                                         rins
+                                         pés 
+                                         pescoço  
+                                         cabeça
+            Nos  [suínos]  a carcaça pode ou não incluir o couro, a cabeça e os pés.
+
+* 7 - Os dados dos 4 trimestres do ano são preliminares até a divulgação dos dados do 1° trimestre do ano seguinte.
+
+
+
+
+
+* [{`abate`}]()
+
+* dados originais [{`IBGE`}](https://ibge.gov.br)
+ -> tabela [{`SIDRA`}](https://sidra.ibge.gov.br/tabela/1092)
+```{r}
+abate <- readr::read_csv(
+    "C:/Users/italo/OneDrive/Área de Trabalho/VsCode/ibge/abate.csv") |>
+    dplyr::select(
+        -`n° informantes %`, -`Animais abatidos %`, -`Peso total carcaça %`) |>
+    janitor::clean_names("snake") |>
+    dplyr::glimpse()
+```
+
+
+```{r}
+abate |>
+    dplyr::filter(
+        tipo_de_inspecao == "Federal" & !animais_abatidos == "NA") |>
+    dplyr::group_by(tipo_de_inspecao, trimestre, tipo_de_rebanho_bovino) |>
+    dplyr::summarise(
+        media_abate = mean(animais_abatidos),
+        soma_abate = sum(animais_abatidos)) |>
+    ggplot2::ggplot(
+            aes(x = as.as.Date(trimestre),
+                y = media_abate,
+                colour = tipo_de_rebanho_bovino)) +
+        facet_grid(tipo_de_rebanho_bovino ~ .) +
+        theme_bw()
+
+
+# If you want the plot to be interactive,
+# you need the following package(s):
+library("plotly")
+ggplotly(graph)
+    
+    dplyr::glimpse()
+    ggplotgui::ggplot_shiny()
+```
+
+
+```{r}
+abate |>
+    dplyr::filter(
+        `Tipo de inspeção` == "Federal" & !`Animais abatidos` == "NA") |>
+    dplyr::group_by(`Tipo de inspeção`, Trimestre, `Tipo de rebanho bovino`) |>
+    dplyr::summarise(
+        mean_abatidos = mean(`Animais abatidos`)) |>
+    ggplot2::ggplot(
+        aes(
+            mean_abatidos, Trimestre,
+                fill = as.factor(`Tipo de rebanho bovino`))) +
+    ggridges::geom_density_ridges(quantile_lines = TRUE,
+                quantile_fun = function(
+                    mean_abatidos, ...) mean(mean_abatidos), alpha = .7) +
+    scale_x_continuous(labels = scales::comma) +
+    facet_grid(~ `Tipo de rebanho bovino`) +
+    scale_fill_viridis_d() 
+```
+
+
+
+```{r}
+abate |>
+    dplyr::filter(
+        `Tipo de inspeção` == "Federal" & !`Animais abatidos` == "NA") |>
+    dplyr::group_by(`Tipo de inspeção`, Trimestre, `Tipo de rebanho bovino`) |>
+    dplyr::summarise(
+        mean_abatidos = mean(`Animais abatidos`)
+    ) |>
+    ggplot2::ggplot(aes(
+        x = `Trimestre`,
+            y = mean_abatidos,
+                fill = `Tipo de rebanho bovino`)) +
+    geom_col(position = "dodge", col = "black") +
+    scale_fill_viridis_d() +
+    labs(title = "Média de abate trimestral",
+        subtitle = "Valores do Serviço de Informação Federal (2022)",
+        fill = "Tipo de rebanho",
+        x = "",
+        y = "Número de cabeças",
+        caption = "by Ítalo Monteiro
+        Source: IBGE [open data(2023)]") +
+    theme(
+        legend.position = c(0.8, 0.8),
+        panel.grid.major = element_line(colour = "gray95"),
+        panel.background = element_rect(fill = "gray95"),
+        legend.background = element_rect(
+        fill = "grey95", colour = "gray95", size = 1),
+        legend.title = element_text(size = 16),
+        legend.text = element_text(size = 12),
+        #legend.position = "none",
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        axis.text.y = element_text(size = 14, color = "black"),
+        axis.text.x = element_text(size = 14, color = "black")
+        )
+plotly
+```
