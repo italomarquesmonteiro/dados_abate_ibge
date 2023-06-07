@@ -36,6 +36,8 @@ library(conflicted)
 library(tidyverse)
 ```
 
+
+
 > Notas
 * 1 - Os dados divulgados são oriundos de estabelecimentos que estão sob *inspeção sanitária federal, estadual ou municipal*.
 * 2 - Os dados das Unidades da Federação com menos de 3 informantes estão desidentificados com o caracter X. *Nessa análise vira* `NA`
@@ -81,90 +83,12 @@ abate <- readr::read_csv(
         -`n° informantes %`, -`Animais abatidos %`, -`Peso total carcaça %`) |>
     janitor::clean_names("snake") |>
     dplyr::glimpse()
-```
-
-
-```{r}
 abate |>
-    dplyr::filter(
-        tipo_de_inspecao == "Federal" & !animais_abatidos == "NA") |>
-    dplyr::group_by(tipo_de_inspecao, trimestre, tipo_de_rebanho_bovino) |>
-    dplyr::summarise(
-        media_abate = mean(animais_abatidos),
-        soma_abate = sum(animais_abatidos)) |>
-    ggplot2::ggplot(
-            aes(x = as.as.Date(trimestre),
-                y = media_abate,
-                colour = tipo_de_rebanho_bovino)) +
-        facet_grid(tipo_de_rebanho_bovino ~ .) +
-        theme_bw()
+    tibble::view()
 
+uf <- geobr::read_state(code_state = "all", year = 2020)
 
-# If you want the plot to be interactive,
-# you need the following package(s):
-library("plotly")
-ggplotly(graph)
-    
+dados <- uf |>
+    dplyr::left_join(abate) |>
     dplyr::glimpse()
-    ggplotgui::ggplot_shiny()
-```
-
-
-```{r}
-abate |>
-    dplyr::filter(
-        `Tipo de inspeção` == "Federal" & !`Animais abatidos` == "NA") |>
-    dplyr::group_by(`Tipo de inspeção`, Trimestre, `Tipo de rebanho bovino`) |>
-    dplyr::summarise(
-        mean_abatidos = mean(`Animais abatidos`)) |>
-    ggplot2::ggplot(
-        aes(
-            mean_abatidos, Trimestre,
-                fill = as.factor(`Tipo de rebanho bovino`))) +
-    ggridges::geom_density_ridges(quantile_lines = TRUE,
-                quantile_fun = function(
-                    mean_abatidos, ...) mean(mean_abatidos), alpha = .7) +
-    scale_x_continuous(labels = scales::comma) +
-    facet_grid(~ `Tipo de rebanho bovino`) +
-    scale_fill_viridis_d() 
-```
-
-
-
-```{r}
-abate |>
-    dplyr::filter(
-        `Tipo de inspeção` == "Federal" & !`Animais abatidos` == "NA") |>
-    dplyr::group_by(`Tipo de inspeção`, Trimestre, `Tipo de rebanho bovino`) |>
-    dplyr::summarise(
-        mean_abatidos = mean(`Animais abatidos`)
-    ) |>
-    ggplot2::ggplot(aes(
-        x = `Trimestre`,
-            y = mean_abatidos,
-                fill = `Tipo de rebanho bovino`)) +
-    geom_col(position = "dodge", col = "black") +
-    scale_fill_viridis_d() +
-    labs(title = "Média de abate trimestral",
-        subtitle = "Valores do Serviço de Informação Federal (2022)",
-        fill = "Tipo de rebanho",
-        x = "",
-        y = "Número de cabeças",
-        caption = "by Ítalo Monteiro
-        Source: IBGE [open data(2023)]") +
-    theme(
-        legend.position = c(0.8, 0.8),
-        panel.grid.major = element_line(colour = "gray95"),
-        panel.background = element_rect(fill = "gray95"),
-        legend.background = element_rect(
-        fill = "grey95", colour = "gray95", size = 1),
-        legend.title = element_text(size = 16),
-        legend.text = element_text(size = 12),
-        #legend.position = "none",
-        axis.title.x = element_text(size = 16),
-        axis.title.y = element_text(size = 16),
-        axis.text.y = element_text(size = 14, color = "black"),
-        axis.text.x = element_text(size = 14, color = "black")
-        )
-plotly
 ```
