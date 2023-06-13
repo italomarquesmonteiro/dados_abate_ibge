@@ -193,6 +193,16 @@ ggsave(
 ```{r}
 abate |>
     dplyr::filter(ano == 2023) |>
+    #dplyr::group_by(tipo_rebanho) |>
+    dplyr::summarise(
+        total_abate = sum(cabecas_abatidas, na.rm = TRUE),
+        media_abate = mean(cabecas_abatidas, na.rm = TRUE)) |>
+    dplyr::arrange(media_abate)
+```
+
+```{r}
+abate |>
+    dplyr::filter(ano == 2022) |>
     ggplot2::ggplot(
         aes(
             x = cabecas_abatidas/1000,
@@ -202,7 +212,7 @@ abate |>
         scale_y_discrete(limits = c("Municipal", "Estadual", "Federal")) +
         scale_x_continuous(labels = scales::comma) +
         scale_x_continuous(breaks = c(10, 30, 50, 70, 110, 270, 630)) +
-        #facet_grid(trimestre ~ . ) +
+        facet_grid(trimestre ~ . ) +
         scale_fill_viridis_d()
 ```
 

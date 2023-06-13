@@ -1,0 +1,209 @@
+---
+title: "Série historica de Abate"
+description: "abates por trimestre (1974-2023)"
+author script: 
+  - name: "Ítalo Marques-Monteiro"
+    github: https://github.com/italomarquesmonteiro
+    kaggle: https://www.kaggle.com/talomarquesmonteiro
+    linkedin: linkedin.com/in/ítalo-monteiro-0b2516144
+    lattes: http://lattes.cnpq.br/7174985368517137
+    orcid_id: https://orcid.org/0000-0003-4367-1034
+    affiliation: Anhanguera College  
+        - Department: Veterinary Medicine
+date: "2023-06-12"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+   *package* [`{conflicted}`](https://conflicted.r-lib.org/)
+   *package* [`{tidyverse}`](https://www.tidyverse.org) possui um ecossistema de packages:
+                           ->[{`ggplot2`}](https://ggplot2.tidyverse.org/).
+                            ->[{`tibble`}](https://tibble.tidyverse.org/).
+                             ->[{`tidyr`}](https://tidyr.tidyverse.org/).
+    
+                              ->[{`dplyr`}](https://dplyr.tidyverse.org/).
+                               ->[{`readr`}](https://readr.tidyverse.org/).
+                                ->[{`purrr`}](https://purrr.tidyverse.org/).
+                                 ->[{`forcats`}](https://forcats.tidyverse.org/).
+   *package* [{`geobr`}](https://github.com/ipeaGIT/geobr). Tem fácil acesso a conjuntos de dados espaciais oficiais do Brasil como objetos 'sf' em R. O pacote inclui uma ampla gama de dados geoespaciais disponíveis em várias escalas geográficas e por vários anos com atributos harmonizados, projeção e topologia fixa.
+                 - Dados do Instituto Brasileiro de Geografia e Estatística[`IBGE`](https://concla.ibge.gov.br/classificacoes/por-tema/codigo-de-areas/codigo-de-areas)
+
+```{r}
+library(conflicted)
+library(tidyverse)
+```
+
+
+
+> Notas
+* 1 - Os dados divulgados são oriundos de estabelecimentos que estão sob *inspeção sanitária federal, estadual ou municipal*.
+* 2 - Os dados das Unidades da Federação com menos de 3 informantes estão desidentificados com o caracter X. *Nessa análise vira* `NA`
+* 3 - O número de informantes se repete nos meses de cada trimestre devido à periodicidade de coleta da pesquisa ser trimestral.
+* 4 - A pesquisa do abate sofreu alterações conceituais a partir de 2012. 
+        As **categorias** de novilhos precoces, vitelos e novilhos foram fundidos em uma só: [novilhos]. 
+        O mesmo vale para [novilhas].
+* 5 - [{`Bovinos`}]()   - gado doméstico, dividido em categorias conforme sexo e idade:
+        [Boi]- bovino macho adulto, com 2 anos de idade ou mais. Inclui o macho não castrado (touro).
+        [Vaca]- bovino fêmea adulta, com 2 anos de idade ou mais, independente de já ter parido ou não.
+        [Novilho]- bovino macho jovem, com menos de 2 anos de idade. Inclui vitelo, bezerro e novilho (precoce ou não).
+        [Novilha]- bovino fêmea jovem, com menos de 2 anos de idade. Inclui vitela, bezerra e novilha (precoce ou não).
+* 6 - cabecas_abatidas da Carcaça - cabecas_abatidas da carcaça quente (em Kg).
+            Entendendo-se como **carcaça**: o animal abatido, formado das massas musculares e ossos, desprovido de:
+                                                                     cabeça, 
+                                                                     mocotós, 
+                                                                     cauda, 
+                                                                     couro, 
+                                                                     órgãos 
+                                                                     vísceras torácicas e abdominais, 
+                                                                     tecnicamente preparado. 
+            Nos [frangos], é facultativa a retirada :
+                                         rins
+                                         pés 
+                                         pescoço  
+                                         cabeça
+            Nos  [suínos]  a carcaça pode ou não incluir o couro, a cabeça e os pés.
+
+* 7 - Os dados dos 4 trimestres do ano são preliminares até a divulgação dos dados do 1° trimestre do ano seguinte.
+
+
+
+
+
+* [{`abate`}]()
+
+* dados originais [{`IBGE`}](https://ibge.gov.br)
+ -> tabela [{`SIDRA`}](https://sidra.ibge.gov.br)
+```{r}
+serie <- readxl::read_xlsx("C:/Users/italo/Downloads/20230612161944.xlsx",
+        skip = 1) |>
+        dplyr::slice(c(2)) |>
+        dplyr::rename(brasil = `...1`) |>
+        dplyr::select(-c(`...2`)) |>
+        tidyr::pivot_longer(-brasil,
+            names_to = "trimestre", values_to = "cabecas_abatidas") |>
+        dplyr::mutate(
+            ano = dplyr::case_when(
+                trimestre == "1º trimestre 1997" ~ 1997,
+                trimestre == "2º trimestre 1997" ~ 1997,
+                trimestre == "3º trimestre 1997" ~ 1997,
+                trimestre == "4º trimestre 1997" ~ 1997,
+                trimestre == "1º trimestre 1998" ~ 1998,
+                trimestre == "2º trimestre 1998" ~ 1998,
+                trimestre == "3º trimestre 1998" ~ 1998,
+                trimestre == "4º trimestre 1998" ~ 1998,
+                trimestre == "1º trimestre 1999" ~ 1999,
+                trimestre == "2º trimestre 1999" ~ 1999,
+                trimestre == "3º trimestre 1999" ~ 1999,
+                trimestre == "4º trimestre 1999" ~ 1999,
+                trimestre == "1º trimestre 2000" ~ 2000,
+                trimestre == "2º trimestre 2000" ~ 2000,
+                trimestre == "3º trimestre 2000" ~ 2000,
+                trimestre == "4º trimestre 2000" ~ 2000,
+                trimestre == "1º trimestre 2001" ~ 2001,
+                trimestre == "2º trimestre 2001" ~ 2001,
+                trimestre == "3º trimestre 2001" ~ 2001,
+                trimestre == "4º trimestre 2001" ~ 2001,
+                trimestre == "1º trimestre 2002" ~ 2002,
+                trimestre == "2º trimestre 2002" ~ 2002,
+                trimestre == "3º trimestre 2002" ~ 2002,
+                trimestre == "4º trimestre 2002" ~ 2002,
+                trimestre == "1º trimestre 2003" ~ 2003,
+                trimestre == "2º trimestre 2003" ~ 2003,
+                trimestre == "3º trimestre 2003" ~ 2003,
+                trimestre == "4º trimestre 2003" ~ 2003,
+                trimestre == "1º trimestre 2004" ~ 2004,
+                trimestre == "2º trimestre 2004" ~ 2004,
+                trimestre == "3º trimestre 2004" ~ 2004,
+                trimestre == "4º trimestre 2004" ~ 2004,
+                trimestre == "1º trimestre 2005" ~ 2005,
+                trimestre == "2º trimestre 2005" ~ 2005,
+                trimestre == "3º trimestre 2005" ~ 2005,
+                trimestre == "4º trimestre 2005" ~ 2005,
+                trimestre == "1º trimestre 2006" ~ 2006,
+                trimestre == "2º trimestre 2006" ~ 2006,
+                trimestre == "3º trimestre 2006" ~ 2006,
+                trimestre == "4º trimestre 2006" ~ 2006,
+                trimestre == "1º trimestre 2007" ~ 2007,
+                trimestre == "2º trimestre 2007" ~ 2007,
+                trimestre == "3º trimestre 2007" ~ 2007,
+                trimestre == "4º trimestre 2007" ~ 2007,
+                trimestre == "1º trimestre 2008" ~ 2008,
+                trimestre == "2º trimestre 2008" ~ 2008,
+                trimestre == "3º trimestre 2008" ~ 2008,
+                trimestre == "4º trimestre 2008" ~ 2008,
+                trimestre == "1º trimestre 2009" ~ 2009,
+                trimestre == "2º trimestre 2009" ~ 2009,
+                trimestre == "3º trimestre 2009" ~ 2009,
+                trimestre == "4º trimestre 2009" ~ 2009,
+                trimestre == "1º trimestre 2010" ~ 2010,
+                trimestre == "2º trimestre 2010" ~ 2010,
+                trimestre == "3º trimestre 2010" ~ 2010,
+                trimestre == "4º trimestre 2010" ~ 2010,
+                trimestre == "1º trimestre 2011" ~ 2011,
+                trimestre == "2º trimestre 2011" ~ 2011,
+                trimestre == "3º trimestre 2011" ~ 2011,
+                trimestre == "4º trimestre 2011" ~ 2011,
+                trimestre == "1º trimestre 2012" ~ 2012,
+                trimestre == "2º trimestre 2012" ~ 2012,
+                trimestre == "3º trimestre 2012" ~ 2012,
+                trimestre == "4º trimestre 2012" ~ 2012,
+                trimestre == "1º trimestre 2013" ~ 2013,
+                trimestre == "2º trimestre 2013" ~ 2013,
+                trimestre == "3º trimestre 2013" ~ 2013,
+                trimestre == "4º trimestre 2013" ~ 2013,
+                trimestre == "1º trimestre 2014" ~ 2014,
+                trimestre == "2º trimestre 2014" ~ 2014,
+                trimestre == "3º trimestre 2014" ~ 2014,
+                trimestre == "4º trimestre 2014" ~ 2014,
+                trimestre == "1º trimestre 2015" ~ 2015,
+                trimestre == "2º trimestre 2015" ~ 2015,
+                trimestre == "3º trimestre 2015" ~ 2015,
+                trimestre == "4º trimestre 2015" ~ 2015,
+                trimestre == "1º trimestre 2016" ~ 2016,
+                trimestre == "2º trimestre 2016" ~ 2016,
+                trimestre == "3º trimestre 2016" ~ 2016,
+                trimestre == "4º trimestre 2016" ~ 2016,
+                trimestre == "1º trimestre 2017" ~ 2017,
+                trimestre == "2º trimestre 2017" ~ 2017,
+                trimestre == "3º trimestre 2017" ~ 2017,
+                trimestre == "4º trimestre 2017" ~ 2017,
+                trimestre == "1º trimestre 2018" ~ 2018,
+                trimestre == "2º trimestre 2018" ~ 2018,
+                trimestre == "3º trimestre 2018" ~ 2018,
+                trimestre == "4º trimestre 2018" ~ 2018,
+                trimestre == "1º trimestre 2019" ~ 2019,
+                trimestre == "2º trimestre 2019" ~ 2019,
+                trimestre == "3º trimestre 2019" ~ 2019,
+                trimestre == "4º trimestre 2019" ~ 2019,
+                trimestre == "1º trimestre 2020" ~ 2020,
+                trimestre == "2º trimestre 2020" ~ 2020,
+                trimestre == "3º trimestre 2020" ~ 2020,
+                trimestre == "4º trimestre 2020" ~ 2020,
+                trimestre == "1º trimestre 2021" ~ 2021,
+                trimestre == "2º trimestre 2021" ~ 2021,
+                trimestre == "3º trimestre 2021" ~ 2021,
+                trimestre == "4º trimestre 2021" ~ 2021,
+                trimestre == "1º trimestre 2022" ~ 2022,
+                trimestre == "2º trimestre 2022" ~ 2022,
+                trimestre == "3º trimestre 2022" ~ 2022,
+                trimestre == "4º trimestre 2022" ~ 2022,
+                trimestre == "1º trimestre 2023" ~ 2023
+            )
+        ) |>
+        dplyr::relocate(brasil, ano : cabecas_abatidas) |> glimpse()
+
+serie |> view()
+```
+
+```{r}
+serie |>
+    readr::write_csv(
+        "C:/Users/italo/OneDrive/Área de Trabalho/VsCode/ibge/serie_abate.csv")
+
+serie_abate <- readr::read_csv(
+    "C:/Users/italo/OneDrive/Área de Trabalho/VsCode/ibge/serie_abate.csv") |>
+    dplyr::glimpse()
+```
