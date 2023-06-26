@@ -13,13 +13,15 @@ author script:
 date: "2023-06-01"
 output: html_document
 ---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-   *package* [`{conflicted}`](https://conflicted.r-lib.org/)
-   *package* [`{tidyverse}`](https://www.tidyverse.org) possui um ecossistema de packages:
+
+   O package [`{conflicted}`](https://conflicted.r-lib.org/)
+   O package [`{tidyverse}`](https://www.tidyverse.org) possui um ecossistema de packages:
                            ->[{`ggplot2`}](https://ggplot2.tidyverse.org/).
                             ->[{`tibble`}](https://tibble.tidyverse.org/).
                              ->[{`tidyr`}](https://tidyr.tidyverse.org/).
@@ -28,9 +30,7 @@ knitr::opts_chunk$set(echo = TRUE)
                                ->[{`readr`}](https://readr.tidyverse.org/).
                                 ->[{`purrr`}](https://purrr.tidyverse.org/).
                                  ->[{`forcats`}](https://forcats.tidyverse.org/).
-   *package* [{`geobr`}](https://github.com/ipeaGIT/geobr). Tem fácil acesso a conjuntos de dados espaciais oficiais do Brasil como objetos 'sf' em R. O pacote inclui uma ampla gama de dados geoespaciais disponíveis em várias escalas geográficas e por vários anos com atributos harmonizados, projeção e topologia fixa.
-                 - Dados do Instituto Brasileiro de Geografia e Estatística[`IBGE`](https://concla.ibge.gov.br/classificacoes/por-tema/codigo-de-areas/codigo-de-areas)
-
+   
 ```{r}
 library(conflicted)
 library(tidyverse)
@@ -100,14 +100,72 @@ abate <- abate |>
     ) |> dplyr::glimpse()
 abate |>
     tibble::view()
+```
 
 
 
+* dados de abate e dados espaciais com:
+    package [{`geobr`}](https://github.com/ipeaGIT/geobr). Tem fácil acesso a conjuntos de dados espaciais oficiais do Brasil como objetos 'sf' em R. O pacote inclui uma ampla gama de dados geoespaciais disponíveis em várias escalas geográficas e por vários anos com atributos harmonizados, projeção e topologia fixa.
+                 - Dados do Instituto Brasileiro de Geografia e Estatística[`IBGE`](https://concla.ibge.gov.br/classificacoes/por-tema/codigo-de-areas/codigo-de-areas)
+
+```{r}
 uf <- geobr::read_state(code_state = "all", year = 2020)
 
 dados <- uf |>
     dplyr::left_join(abate) |>
     dplyr::glimpse()
+```
+
+
+Número **total de cabeças abatidas**
+```{r}
+abate |>
+    dplyr::filter(trimestre %in% c(
+            "1º trimestre 2022", "1º trimestre 2023")) %>%
+    dplyr::group_by(ano, trimestre) %>%
+    dplyr::mutate(
+    var = cabecas_abatidas / sum(
+        cabecas_abatidas) * 100, na.rm = TRUE) |>
+    view()
+```
+
+teste <-  dados2 %>% 
+    group_by(Ano, Atividade) %>%
+  mutate('%' = Valores/sum(Valores) * 100)
+
+
+
+Grafico dos **dados preliminares** do 1º trimestre de 2023
+```{r}
+figura_abate_2023 <- abate |>
+    dplyr::filter(ano == 2023) |>
+    ggplot(aes(cabecas_abatidas, tipo_inspecao,
+        fill= as.factor(tipo_rebanho))) +
+    scale_x_continuous(labels = scales::comma) +
+    ggridges::geom_density_ridges(quantile_lines = TRUE,
+        quantile_fun = function(qtd, ...) mean(qtd), alpha = .8) +
+    scale_fill_viridis_d() +
+    theme(legend.position = c(0.6, 0.25),
+    panel.grid.major = element_line(colour = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    legend.background = element_rect(
+        fill = "grey95", colour = "gray95", size = 1)) +
+    labs(
+        fill = "Tipo de Rebanho",
+        x = "Cabeças Abatidas",
+        y = "Serviço de inspeção") +
+    annotate("text", x = 300000, y = 4.5, color = "gray30", size = 10,
+        label = "Abate de bovinos no 1º trimestre de 2023") +
+    annotate("text", x = 500000, y = 0.8, color = "gray40", size = 5,
+        label = "Pesquisa pecuária municipal (2023)") +
+    annotate("text", x = 600000, y = 0.6,
+    label = "Source: IBGE [open data(2023)]
+    by Ítalo Monteiro" , color = "gray50")
+figura_abate_2023
+
+#ggsave("C:/Users/italo/Downloads/figura_abate_2023.png",
+#    plot = figura_abate_2023,
+#    dpi = 1200)
 ```
 
 ```{r}
@@ -231,4 +289,16 @@ abate |>
     #scale_x_continuous(labels = scales::comma) +
     #facet_grid(~ trimestre) +
     scale_fill_viridis_d()
+```
+
+
+
+```{r}
+dados |>
+    dplyr::filter(
+        trimestre %in% c(
+            "1º trimestre 2022", "1º trimestre 2023")) |>
+    dplyr::group_by(abbrev_state, ano) |>
+    dplyr::summarise(
+        soma_abate = sum(cabecas_abatidas))
 ```
